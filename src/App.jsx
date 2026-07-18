@@ -865,6 +865,9 @@ function describeItem(item, lang) {
 }
 
 // ══════════════════════════════════════════════════
+// ナビゲーションの順序定義（スワイプ切替に使用）
+const NAV_ORDER = ["home", "search", "post", "gift", "me"];
+
 // ── デスクトップ判定フック ──────────────────────────────────────────────────
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
