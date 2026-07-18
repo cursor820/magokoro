@@ -867,6 +867,14 @@ function describeItem(item, lang) {
 // ══════════════════════════════════════════════════
 // ナビゲーションの順序定義（スワイプ切替に使用）
 const NAV_ORDER = ["home", "search", "post", "gift", "me"];
+// ナビゲーションのメタ情報（絵文字・ラベルキー）
+const NAV_META = [
+  { nav: "home",   emoji: "🏠" },
+  { nav: "search", emoji: "🐿️" },
+  { nav: "post",   emoji: "✍️" },
+  { nav: "gift",   emoji: "🎁" },
+  { nav: "me",     emoji: "👤" },
+];
 
 // ── デスクトップ判定フック ──────────────────────────────────────────────────
 function useIsDesktop() {
