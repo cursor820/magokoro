@@ -159,7 +159,7 @@ const LANG = {
     thanksReactionLabel: "🥰 もらった気持ち", thanksReactionPh: "例：驚きと嬉しさで、思わず笑顔になりました",
     authTagline: "だれかを想うスイッチ、ON。", authSubtitle: "お土産・ギフトのレビューをシェアしよう",
     authCocorisuWelcomeBack: "おかえりなさいりす！",
-    authLineBtn: "LINEで3秒登録・ログイン",
+    authLineBtn: "LINEログイン（準備中）",
     authIdpassBtn: "個人情報の入力なしで始める",
     authSwitchToLogin: "すでにアカウントをお持ちの方は", authSwitchToSignup: "はじめての方は",
     authLoginLink: "ログイン", authSignupLink: "新規登録",
@@ -245,7 +245,7 @@ const LANG = {
     thanksReactionLabel: "🥰 How it felt", thanksReactionPh: "e.g. Surprised and so happy — I couldn't stop smiling",
     authTagline: "Switch on. Think of someone.", authSubtitle: "Share your gifting stories.",
     authCocorisuWelcomeBack: "Welcome back-risu!",
-    authLineBtn: "Continue with LINE (3 sec)",
+    authLineBtn: "LINE Login (coming soon)",
     authIdpassBtn: "Start without personal info",
     authSwitchToLogin: "Already have an account?", authSwitchToSignup: "New here?",
     authLoginLink: "Log in", authSignupLink: "Sign up",
@@ -865,6 +865,9 @@ function describeItem(item, lang) {
 }
 
 // ══════════════════════════════════════════════════
+// 待機ヘルパー
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 // ナビゲーションの順序定義（スワイプ切替に使用）
 const NAV_ORDER = ["home", "search", "post", "gift", "me"];
 // ナビゲーションのメタ情報（絵文字・ラベルキー）
@@ -1007,7 +1010,7 @@ function AuthGate({ t, hatomono, authStep, loginId, password, recoveryQ, recover
           <h2 style={{ fontSize: "20px", fontWeight: "bold", margin: "0 0 4px 0" }}>{t.authTagline}</h2>
           <p style={{ fontSize: "13px", color: "#64748B", margin: "0 0 20px 0" }}>{t.authSubtitle}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <button onClick={onLineLogin} disabled={isSubmitting} style={{ width: "100%", background: "#06C755", color: "#fff", border: "none", padding: "13px", borderRadius: "10px", fontWeight: "bold", cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1, fontSize: "14px" }}>
+            <button disabled style={{ width: "100%", background: "#A8D5B8", color: "#fff", border: "none", padding: "13px", borderRadius: "10px", fontWeight: "bold", cursor: "not-allowed", opacity: 0.6, fontSize: "14px" }}>
               {isSubmitting ? t.authSubmitting : t.authLineBtn}
             </button>
             <button onClick={onGotoSignup} disabled={isSubmitting} style={{ width: "100%", background: "#F8FAFC", color: "#334155", border: "1px solid #CBD5E1", padding: "13px", borderRadius: "10px", fontWeight: "bold", cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1, fontSize: "14px" }}>
@@ -1445,9 +1448,8 @@ function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory,
               distance={calcDist(origin.lat, origin.lng, post.lat, post.lng)}
               isFollowing={following.includes(post.userName)}
               onLike={async (id) => {
-                    const post = stateRef.current.posts.items.find(p => p.id === id);
                     dispatch({ type: A.TOGGLE_LIKE, payload: id });
-                    if (post && !id.startsWith("optimistic_")) await postService.toggleLike(id, post.liked);
+                    if (!id.startsWith("optimistic_")) await postService.toggleLike(id, post.liked);
                   }}
               onToggleFollow={name => dispatch({ type: A.TOGGLE_FOLLOW, payload: name })}
               onOpenQuote={onOpenQuote}
@@ -1635,6 +1637,7 @@ const A = {
 
 // 💬 チャットセッション（Claude/Gemini式の履歴管理）
 const CHAT_STORAGE_KEY = "magokoro_chat_sessions";
+const APP_STORAGE_KEY = "magokoro_app_state";
 // 投稿はFirestoreで管理するためAPP_STORAGE_KEYは不要
 function makeChatSession(lang) {
   return { id: "cs" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: LANG[lang].chatDefaultTitle, log: [{ sender: "hato", text: LANG[lang].chatWelcome, expression: "happy" }], context: { lastRegion: null }, createdAt: Date.now() };
@@ -1645,7 +1648,7 @@ const initialState = {
   ui: { lang: "ja", currentNav: "home" },
   auth: { isLoggedIn: false, isCheckingSession: true, isSubmitting: false, step: "welcome", lastAction: null, loginId: "", password: "", recoveryQ: "", recoveryA: "", error: "", currentUser: null },
   gamification: { level: 1, xp: 15, showXpAlert: false },
-  posts: { items: [], selectedCategory: "すべて", searchQuery: "", feedMode: "all" },
+  posts: { items: POSTS_JA, selectedCategory: "すべて", searchQuery: "", feedMode: "all" },
   social: { following: ["Haruka_M"] },
   location: { userLocation: null, isLocating: false, note: "" },
   cocorisu: { expression: "idle", isTalking: false },
@@ -1978,7 +1981,11 @@ export default function AgeteApp() {
   // ── Firestoreタイムラインのリアルタイム購読 ──────────────────────
   useEffect(() => {
     const unsub = postService.subscribeTimeline((items) => {
-      dispatch({ type: A.SET_TIMELINE, payload: items });
+      // Firestoreが空のうちはシード投稿を残す（空のタイムラインで「あれ？」とならないように）
+      if (items.length > 0) {
+        const seeds = stateRef.current.ui.lang === "ja" ? POSTS_JA : POSTS_EN;
+        dispatch({ type: A.SET_TIMELINE, payload: [...items, ...seeds] });
+      }
     });
     return () => unsub();
   }, []);
