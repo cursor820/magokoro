@@ -181,6 +181,8 @@ const LANG = {
     myEditName: "名前を変更", mySave: "保存", mySaving: "保存中…", myCancel: "キャンセル",
     myNameSaved: "変更したりす✓", myNameSaveError: "保存できなかったりす、もう一度試してほしいりす",
     myGuestNameNote: "ゲストの名前は固定りす。名前を変えたい時はIDとパスワードで登録してほしいりす",
+    myEditAvatar: "写真を変更", myAvatarError: "写真を読み込めなかったりす、別の画像で試してほしいりす",
+    myGuestAvatarNote: "ゲストは写真も設定できないりす。アカウントを作るとプロフィール写真を設定できるりす📷",
     authSubmitting: "送信中…",
     authWelcomeBackBody: "続きから、お土産の物語を集めていこう。",
     authSuccessTitle: "ようこそ、まごころへ！",
@@ -275,6 +277,8 @@ const LANG = {
     myEditName: "Edit name", mySave: "Save", mySaving: "Saving…", myCancel: "Cancel",
     myNameSaved: "Saved-risu ✓", myNameSaveError: "Couldn't save-risu, please try again",
     myGuestNameNote: "Guest names are fixed-risu. Sign up with an ID and password to set your own name",
+    myEditAvatar: "Change photo", myAvatarError: "Couldn't load that photo-risu, please try another image",
+    myGuestAvatarNote: "Guests can't set a photo either-risu. Create an account to set a profile photo📷",
     authSubmitting: "Submitting…",
     authWelcomeBackBody: "Let's pick up where you left off.",
     authSuccessTitle: "Welcome to Magokoro!",
@@ -367,6 +371,8 @@ const LANG = {
     myEditName: "이름 변경", mySave: "저장", mySaving: "저장 중…", myCancel: "취소",
     myNameSaved: "변경했다리스✓", myNameSaveError: "저장하지 못했다리스, 다시 시도해달라리스",
     myGuestNameNote: "게스트 이름은 고정이리스. 이름을 바꾸려면 ID와 비밀번호로 가입해달라리스",
+    myEditAvatar: "사진 변경", myAvatarError: "사진을 불러오지 못했다리스, 다른 이미지로 시도해달라리스",
+    myGuestAvatarNote: "게스트는 사진도 설정할 수 없다리스. 계정을 만들면 프로필 사진을 설정할 수 있다리스📷",
     authSubmitting: "전송 중…",
     authWelcomeBackBody: "이어서 선물 이야기를 모아볼까요.",
     authSuccessTitle: "마고코로에 어서 오세요!",
@@ -988,6 +994,30 @@ const NAV_META = [
 ];
 
 // ── デスクトップ判定フック ──────────────────────────────────────────────────
+// プロフィール写真を小さく圧縮する（Firestoreの容量制限を考慮し200x200・JPEG化）
+function resizeImageFile(file, maxSize = 200, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("image decode failed"));
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
   useEffect(() => {
@@ -1221,7 +1251,9 @@ function PostCard({ t, post, distance, isFollowing, onLike, onToggleFollow, onOp
       <div style={{ padding: "16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", gap: "8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: post.avatarColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "14px", flexShrink: 0 }}>{post.userAvatar}</div>
+            {post.userAvatarUrl
+              ? <img src={post.userAvatarUrl} alt="" style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+              : <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: post.avatarColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "14px", flexShrink: 0 }}>{post.userAvatar}</div>}
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: "13px", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{post.userName}</div>
               <div style={{ fontSize: "10px", color: "#A0AEC0" }}>{post.createdAt} • {post.locationName}{distance != null && <span style={{ color: "#5B9BD5", marginLeft: "4px" }}>📍 {distance}{t.distanceUnit}</span>}</div>
@@ -1702,12 +1734,15 @@ function GiftPanel({ t, isDesktop, dbSearchQuery, dispatch, A }) {
   );
 }
 
-function MePanel({ t, userLv, userXp, loginId, displayName, followingCount, onLogout, onSaveDisplayName }) {
+function MePanel({ t, userLv, userXp, loginId, displayName, avatarUrl, followingCount, onLogout, onSaveDisplayName, onSaveAvatar }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(displayName || loginId || "");
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState("");
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarNote, setAvatarNote] = useState("");
   const isGuest = (loginId || "").startsWith("guest_");
+  const fileInputRef = useRef(null);
 
   const handleSave = async () => {
     const trimmed = nameDraft.trim();
@@ -1719,10 +1754,40 @@ function MePanel({ t, userLv, userXp, loginId, displayName, followingCount, onLo
     else { setSaveNote(t.myNameSaveError); }
   };
 
+  const handlePickAvatar = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setAvatarSaving(true);
+    setAvatarNote("");
+    try {
+      const dataUrl = await resizeImageFile(file, 200, 0.8);
+      const ok = await onSaveAvatar(dataUrl);
+      setAvatarNote(ok ? t.myNameSaved : t.myNameSaveError);
+    } catch (_) {
+      setAvatarNote(t.myAvatarError);
+    }
+    setAvatarSaving(false);
+    setTimeout(() => setAvatarNote(""), 2500);
+  };
+
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "16px" }}>
       <div style={{ background: "#fff", borderRadius: "16px", padding: "24px", border: "1px solid #E2E8F0", textAlign: "center" }}>
-        <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg,#5B9BD5,#3D7CB8)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", fontWeight: "bold", margin: "0 auto 12px auto" }}>{(displayName || t.myAvatar || "?").charAt(0)}</div>
+        <div style={{ position: "relative", width: "64px", margin: "0 auto 12px auto" }}>
+          {avatarUrl
+            ? <img src={avatarUrl} alt="" style={{ width: "64px", height: "64px", borderRadius: "50%", objectFit: "cover", display: "block" }} />
+            : <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg,#5B9BD5,#3D7CB8)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", fontWeight: "bold" }}>{(displayName || t.myAvatar || "?").charAt(0)}</div>}
+          {!isGuest && (
+            <button onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={avatarSaving} title={t.myEditAvatar}
+              style={{ position: "absolute", bottom: "-2px", right: "-2px", width: "24px", height: "24px", borderRadius: "50%", background: "#3D7CB8", border: "2px solid #fff", color: "#fff", fontSize: "11px", cursor: avatarSaving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+              {avatarSaving ? "…" : "📷"}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickAvatar} style={{ display: "none" }} />
+        </div>
+        {isGuest && <p style={{ fontSize: "10.5px", color: "#94A3B8", margin: "0 0 4px 0" }}>{t.myGuestAvatarNote}</p>}
+        {avatarNote && <p style={{ fontSize: "11px", color: avatarNote === t.myNameSaved ? "#16A34A" : "#EF4444", margin: "0 0 8px 0" }}>{avatarNote}</p>}
 
         {editingName ? (
           <div style={{ maxWidth: "260px", margin: "0 auto 8px auto" }}>
@@ -1774,6 +1839,7 @@ const A = {
   AUTH_SUBMIT_START: "AUTH_SUBMIT_START", AUTH_SUBMIT_ERROR: "AUTH_SUBMIT_ERROR",
   AUTH_SUBMIT_SUCCESS: "AUTH_SUBMIT_SUCCESS", AUTH_LINE_LOGIN_SUCCESS: "AUTH_LINE_LOGIN_SUCCESS",
   AUTH_UPDATE_DISPLAY_NAME: "AUTH_UPDATE_DISPLAY_NAME",
+  AUTH_UPDATE_AVATAR: "AUTH_UPDATE_AVATAR",
   AUTH_FINALIZE: "AUTH_FINALIZE", AUTH_LOGOUT: "AUTH_LOGOUT", SESSION_CHECK_DONE: "SESSION_CHECK_DONE",
   SET_TIMELINE: "SET_TIMELINE",
   AWARD_XP: "AWARD_XP", HIDE_XP_ALERT: "HIDE_XP_ALERT",
@@ -1856,6 +1922,7 @@ function reducer(state, action) {
     case A.AUTH_SUBMIT_ERROR: return { ...state, auth: { ...state.auth, isSubmitting: false, error: action.payload.message, password: action.payload.clearPassword ? "" : state.auth.password }, cocorisu: { ...state.cocorisu, expression: "concerned" } };
     case A.AUTH_SUBMIT_SUCCESS: return { ...state, auth: { ...state.auth, isSubmitting: false, error: "", step: "success", password: "", currentUser: action.payload.user }, cocorisu: { ...state.cocorisu, expression: "celebrate" } };
     case A.AUTH_UPDATE_DISPLAY_NAME: return { ...state, auth: { ...state.auth, currentUser: { ...state.auth.currentUser, displayName: action.payload } } };
+    case A.AUTH_UPDATE_AVATAR: return { ...state, auth: { ...state.auth, currentUser: { ...state.auth.currentUser, avatarUrl: action.payload } } };
     case A.AUTH_LINE_LOGIN_SUCCESS: return { ...state, auth: { ...state.auth, isSubmitting: false, isLoggedIn: true, currentUser: action.payload, error: "" }, ui: { ...state.ui, currentNav: "home" }, cocorisu: { ...state.cocorisu, expression: "happy" } };
     case A.AUTH_FINALIZE: return { ...state, auth: { ...state.auth, isLoggedIn: true }, ui: { ...state.ui, currentNav: "home" }, cocorisu: { ...state.cocorisu, expression: "idle" } };
     case A.AUTH_LOGOUT: return { ...state, auth: { ...state.auth, isLoggedIn: false, step: "welcome", currentUser: null, lastAction: null, loginId: "", password: "" }, cocorisu: { ...state.cocorisu, expression: "idle" } };
@@ -1993,7 +2060,7 @@ const authService = {
       return { ok: true, user: { uid: fbAuth.currentUser.uid, loginId, displayName: loginId } };
     } catch (e) {
       console.error("signup error:", e);
-      return { ok: false, code: "AUTH_ERROR", debugMsg: (e && e.message) || String(e) };
+      return { ok: false, code: "AUTH_ERROR" };
     }
   },
   async login(loginId, password) {
@@ -2004,7 +2071,7 @@ const authService = {
       if (!snap.exists()) return { ok: false, code: "INVALID_CREDENTIALS" };
       const passwordHash = await hashPassword(password);
       if (snap.data().passwordHash !== passwordHash) return { ok: false, code: "INVALID_CREDENTIALS" };
-      return { ok: true, user: { uid: fbAuth.currentUser.uid, loginId, displayName: snap.data().displayName || loginId } };
+      return { ok: true, user: { uid: fbAuth.currentUser.uid, loginId, displayName: snap.data().displayName || loginId, avatarUrl: snap.data().avatarUrl || null } };
     } catch (e) {
       console.error("login error:", e);
       return { ok: false, code: "AUTH_ERROR" };
@@ -2017,6 +2084,16 @@ const authService = {
       return { ok: true };
     } catch (e) {
       console.error("updateDisplayName error:", e);
+      return { ok: false };
+    }
+  },
+  async updateAvatar(loginId, avatarDataUrl) {
+    try {
+      if (!(await ensureAuthed())) return { ok: false };
+      await setDoc(doc(fbDb, "users", loginId), { avatarUrl: avatarDataUrl }, { merge: true });
+      return { ok: true };
+    } catch (e) {
+      console.error("updateAvatar error:", e);
       return { ok: false };
     }
   },
@@ -2118,6 +2195,7 @@ export default function AgeteApp() {
   const { lang, currentNav } = state.ui;
   const { isLoggedIn, isCheckingSession, isSubmitting, step: authStep, lastAction, loginId, password, recoveryQ, recoveryA, error: authError, currentUser } = state.auth;
   const displayName = currentUser?.displayName || loginId;
+  const avatarUrl = currentUser?.avatarUrl || null;
   const { level: userLv, xp: userXp, showXpAlert } = state.gamification;
   const { items: posts, selectedCategory, searchQuery: postSearchQuery, feedMode } = state.posts;
   const { following } = state.social;
@@ -2263,7 +2341,7 @@ export default function AgeteApp() {
       } else {
         const msg = result.code === "DUPLICATE_ID" ? t.authErrDuplicateId
           : result.code === "INVALID_CREDENTIALS" ? t.authErrInvalidCredentials
-          : t.authErrNetwork + (result.debugMsg ? " [DEBUG: " + result.debugMsg + "]" : "");
+          : t.authErrNetwork;
         dispatch({ type: A.AUTH_SUBMIT_ERROR, payload: { message: msg, clearPassword: true } });
       }
     } catch (_) {
@@ -2288,6 +2366,21 @@ export default function AgeteApp() {
       dispatch({ type: A.AUTH_UPDATE_DISPLAY_NAME, payload: newName });
       try {
         const updated = { ...cur, displayName: newName };
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+      } catch (_) { /* noop */ }
+    }
+    return result.ok;
+  };
+
+  // プロフィール写真の保存：Firestore（本アカウントの永続情報）とローカルstateの両方を更新
+  const handleSaveAvatar = async (dataUrl) => {
+    const cur = stateRef.current.auth.currentUser;
+    if (!cur || !cur.loginId || cur.loginId.startsWith("guest_")) return false; // 匿名ゲストは変更不可
+    const result = await authService.updateAvatar(cur.loginId, dataUrl);
+    if (result.ok) {
+      dispatch({ type: A.AUTH_UPDATE_AVATAR, payload: dataUrl });
+      try {
+        const updated = { ...cur, avatarUrl: dataUrl };
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
       } catch (_) { /* noop */ }
     }
@@ -2394,6 +2487,7 @@ export default function AgeteApp() {
     const newPostData = {
       uid,
       userName: s.auth.currentUser?.displayName || (t.myName + "_" + uid.slice(0, 6)),
+      userAvatarUrl: s.auth.currentUser?.avatarUrl || null,
       userAvatar: t.myAvatar, avatarColor: "#5B9BD5",
       giftEmoji: formMode === "thanks" ? "💝" : "🎁",
       giftBg: "linear-gradient(135deg,#eef2f5,#dbe4ec)",
@@ -2447,7 +2541,7 @@ export default function AgeteApp() {
         </div>
       </div>
     ),
-    me: <MePanel t={t} userLv={userLv} userXp={userXp} loginId={loginId} displayName={displayName} followingCount={following.length} onLogout={handleLogout} onSaveDisplayName={handleSaveDisplayName} />,
+    me: <MePanel t={t} userLv={userLv} userXp={userXp} loginId={loginId} displayName={displayName} avatarUrl={avatarUrl} followingCount={following.length} onLogout={handleLogout} onSaveDisplayName={handleSaveDisplayName} onSaveAvatar={handleSaveAvatar} />,
   };
 
   if (isCheckingSession) {
