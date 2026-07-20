@@ -3,7 +3,7 @@ import { useReducer, useEffect, useRef, useState, useCallback } from "react";
 // ── Firebase SDK（環境変数で設定・GitHubには鍵を残さない） ──────────────
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "firebase/auth";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, increment, arrayUnion, arrayRemove, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, increment, arrayUnion, arrayRemove, runTransaction, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FB_API_KEY,
@@ -1601,8 +1601,16 @@ function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory,
                   }}
               onToggleFollow={name => dispatch({ type: A.TOGGLE_FOLLOW, payload: name })}
               onOpenQuote={onOpenQuote}
-              onAddComment={(postId, text) => dispatch({ type: A.ADD_COMMENT, payload: { postId, text } })}
-              onAddReply={(postId, commentId, text) => dispatch({ type: A.ADD_REPLY, payload: { postId, commentId, text } })} />
+              onAddComment={(postId, text) => {
+                    const comment = { id: "c" + Date.now(), name: t.myName, avatar: t.myAvatar, color: "#5B9BD5", text, time: t.justNow, replies: [] };
+                    dispatch({ type: A.ADD_COMMENT, payload: { postId, comment } });
+                    if (!postId.startsWith("optimistic_")) postService.addComment(postId, comment);
+                  }}
+              onAddReply={(postId, commentId, text) => {
+                    const reply = { id: "r" + Date.now(), name: t.myName, avatar: t.myAvatar, color: "#5B9BD5", text, time: t.justNow };
+                    dispatch({ type: A.ADD_REPLY, payload: { postId, commentId, reply } });
+                    if (!postId.startsWith("optimistic_")) postService.addReply(postId, commentId, reply);
+                  }} />
           ))}
         </div>
       )}
@@ -1946,16 +1954,13 @@ function reducer(state, action) {
     }
     case A.TOGGLE_LIKE: return { ...state, posts: { ...state.posts, items: state.posts.items.map(p => p.id === action.payload ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p) } };
     case A.ADD_COMMENT: {
-      const { postId, text } = action.payload;
-      const t = LANG[state.ui.lang];
-      const nc = { id: "c" + Date.now(), name: t.myName, avatar: t.myAvatar, color: "#5B9BD5", text, time: t.justNow, replies: [] };
-      return { ...state, posts: { ...state.posts, items: state.posts.items.map(p => p.id === postId ? { ...p, commentList: [...(p.commentList || []), nc] } : p) } };
+      // comment（新規コメントの完全なオブジェクト）は呼び出し側（Firestoreへの永続化と共通化するため）で生成する
+      const { postId, comment } = action.payload;
+      return { ...state, posts: { ...state.posts, items: state.posts.items.map(p => p.id === postId ? { ...p, commentList: [...(p.commentList || []), comment] } : p) } };
     }
     case A.ADD_REPLY: {
-      const { postId, commentId, text } = action.payload;
-      const t = LANG[state.ui.lang];
-      const nr = { id: "r" + Date.now(), name: t.myName, avatar: t.myAvatar, color: "#5B9BD5", text, time: t.justNow };
-      return { ...state, posts: { ...state.posts, items: state.posts.items.map(p => p.id !== postId ? p : { ...p, commentList: (p.commentList || []).map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), nr] } : c) }) } };
+      const { postId, commentId, reply } = action.payload;
+      return { ...state, posts: { ...state.posts, items: state.posts.items.map(p => p.id !== postId ? p : { ...p, commentList: (p.commentList || []).map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), reply] } : c) }) } };
     }
     case A.SUBMIT_POST_SUCCESS: return { ...state,
       posts: { ...state.posts, items: [action.payload, ...state.posts.items] },
@@ -2165,6 +2170,35 @@ const postService = {
       return { ok: false };
     }
   },
+  async addComment(postId, comment) {
+    try {
+      if (!(await ensureAuthed())) return { ok: false };
+      await updateDoc(doc(fbDb, "posts", postId), { commentList: arrayUnion(comment) });
+      return { ok: true };
+    } catch (e) {
+      console.error("Firestore addComment error:", e);
+      return { ok: false };
+    }
+  },
+  // replyはcommentList内の特定要素のネストした配列に追加するため、arrayUnionでは書けない。
+  // 読み取り→書き込みをトランザクションにして、同時返信による上書き消失を防ぐ
+  async addReply(postId, commentId, reply) {
+    try {
+      if (!(await ensureAuthed())) return { ok: false };
+      const ref = doc(fbDb, "posts", postId);
+      await runTransaction(fbDb, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) return;
+        const commentList = snap.data().commentList || [];
+        const next = commentList.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), reply] } : c);
+        tx.update(ref, { commentList: next });
+      });
+      return { ok: true };
+    } catch (e) {
+      console.error("Firestore addReply error:", e);
+      return { ok: false };
+    }
+  },
 };
 
 
@@ -2189,7 +2223,7 @@ const postService = {
 //       allow create: if request.auth != null;        // 認証済みのみ投稿可
 //       allow update: if request.auth != null
 //         && request.resource.data.diff(resource.data).affectedKeys()
-//            .hasOnly(['likes']);                     // いいね数の更新のみ許可
+//            .hasOnly(['likes', 'likedBy', 'commentList']); // いいね・コメント・返信の更新のみ許可
 //     }
 //   }
 // }
