@@ -3,7 +3,7 @@ import { useReducer, useEffect, useRef, useState, useCallback } from "react";
 // ── Firebase SDK（環境変数で設定・GitHubには鍵を残さない） ──────────────
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "firebase/auth";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, increment, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, increment, arrayUnion, arrayRemove, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FB_API_KEY,
@@ -1543,7 +1543,7 @@ function PostForm({ t, mode = "normal", quoteTarget,
 // ══════════════════════════════════════════════════
 // 🧩 HomePanel / SearchPanel / MePanel
 // ══════════════════════════════════════════════════
-function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory, postSearchQuery, userLocation, isLocating, locationNote, demoOrigin, calcDist, dispatch, A, onOpenQuote }) {
+function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory, postSearchQuery, userLocation, isLocating, locationNote, demoOrigin, calcDist, dispatch, A, onOpenQuote, myUid }) {
   const q = postSearchQuery.trim().toLowerCase();
   const filtered = posts.filter(p => {
     if (feedMode === "following" && !following.includes(p.userName) && p.userName !== t.myName) return false;
@@ -1597,7 +1597,7 @@ function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory,
               isFollowing={following.includes(post.userName)}
               onLike={async (id) => {
                     dispatch({ type: A.TOGGLE_LIKE, payload: id });
-                    if (!id.startsWith("optimistic_")) await postService.toggleLike(id, post.liked);
+                    if (!id.startsWith("optimistic_")) await postService.toggleLike(id, myUid || "anon", post.liked);
                   }}
               onToggleFollow={name => dispatch({ type: A.TOGGLE_FOLLOW, payload: name })}
               onOpenQuote={onOpenQuote}
@@ -2122,7 +2122,7 @@ const postService = {
       const ref = await addDoc(collection(fbDb, "posts"), {
         ...postData,
         likes: 0,
-        liked: false,
+        likedBy: [],
         comments: 0,
         createdAt: serverTimestamp(),
       });
@@ -2132,25 +2132,32 @@ const postService = {
       return { ok: false };
     }
   },
-  subscribeTimeline(callback) {
+  // myUid: 閲覧者自身のuid。likedBy配列に含まれているかどうかで、この端末での「いいね済み」表示を都度算出する
+  // （likedを単一の真偽値としてFirestoreに持つと、誰か一人がいいねしただけで全員の画面が「いいね済み」になってしまうため）
+  subscribeTimeline(myUid, callback) {
     // 最新100件を更新日時降順でリアルタイム購読
     const q = query(collection(fbDb, "posts"), orderBy("createdAt", "desc"), limit(100));
     return onSnapshot(q, (snap) => {
-      const items = snap.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-        createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate().toLocaleDateString("ja-JP") : "たった今",
-      }));
+      const items = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data,
+          liked: !!(myUid && (data.likedBy || []).includes(myUid)),
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString("ja-JP") : "たった今",
+        };
+      });
       callback(items);
     }, (err) => {
       console.error("Firestore onSnapshot error:", err);
     });
   },
-  async toggleLike(postId, currentlyLiked) {
+  async toggleLike(postId, myUid, currentlyLiked) {
     try {
-      if (!(await ensureAuthed())) return;
+      if (!(await ensureAuthed())) return { ok: false };
       await updateDoc(doc(fbDb, "posts", postId), {
         likes: increment(currentlyLiked ? -1 : 1),
+        likedBy: currentlyLiked ? arrayRemove(myUid) : arrayUnion(myUid),
       });
       return { ok: true };
     } catch (e) {
@@ -2272,8 +2279,10 @@ export default function AgeteApp() {
   }, []);
 
   // ── Firestoreタイムラインのリアルタイム購読 ──────────────────────
+  // 自分のuidが変わる（ログイン/ログアウト/セッション復元）たびに、いいね済み判定をやり直すため再購読する
+  const myUid = currentUser?.uid || null;
   useEffect(() => {
-    const unsub = postService.subscribeTimeline((items) => {
+    const unsub = postService.subscribeTimeline(myUid, (items) => {
       // Firestoreが空のうちはシード投稿を残す（空のタイムラインで「あれ？」とならないように）
       if (items.length > 0) {
         const seeds = stateRef.current.ui.lang === "ja" ? POSTS_JA : POSTS_EN;
@@ -2281,7 +2290,7 @@ export default function AgeteApp() {
       }
     });
     return () => unsub();
-  }, []);
+  }, [myUid]);
 
   // ── チャット履歴の保存（本番では維持・プレビューでは制限により保存されない） ──
   useEffect(() => {
@@ -2528,7 +2537,7 @@ export default function AgeteApp() {
   };
 
   const panels = {
-    home: <HomePanel t={t} isDesktop={isDesktop} posts={posts} feedMode={feedMode} following={following} selectedCategory={selectedCategory} postSearchQuery={postSearchQuery} userLocation={userLocation} isLocating={isLocating} locationNote={locationNote} demoOrigin={demoOrigin} calcDist={calcDist} dispatch={dispatch} A={A} onOpenQuote={handleOpenQuote} />,
+    home: <HomePanel t={t} isDesktop={isDesktop} posts={posts} feedMode={feedMode} following={following} selectedCategory={selectedCategory} postSearchQuery={postSearchQuery} userLocation={userLocation} isLocating={isLocating} locationNote={locationNote} demoOrigin={demoOrigin} calcDist={calcDist} dispatch={dispatch} A={A} onOpenQuote={handleOpenQuote} myUid={myUid} />,
     search: <SearchPanel t={t} isDesktop={isDesktop} hatomono={hatomono} isHatoTalking={isHatoTalking} chatLog={chatLog} chatInput={chatInput} isSending={isSending} isWebSearching={isWebSearching} sessions={chatSessions} activeId={chatActiveId} showHistory={chatShowHistory} dbSearchQuery={dbSearchQuery} onSendChat={handleSendChat} onChatKeyDown={handleChatKeyDown} dispatch={dispatch} A={A} />,
     gift: <GiftPanel t={t} isDesktop={isDesktop} dbSearchQuery={dbSearchQuery} dispatch={dispatch} A={A} />,
     post: (
