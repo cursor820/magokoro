@@ -984,6 +984,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ナビゲーションの順序定義（スワイプ切替に使用）
 const NAV_ORDER = ["home", "search", "post", "gift", "me"];
+// 位置情報取得のデモ用フォールバック座標（旭川駅）。値が変わらない定数なのでコンポーネント外に置く
+// （コンポーネント内に置くと毎レンダーで新しいオブジェクトになり、useEffectの依存配列に入れられない）
+const demoOrigin = { lat: 43.7628, lng: 142.3584 };
 // ナビゲーションのメタ情報（絵文字・ラベルキー）
 const NAV_META = [
   { nav: "home",   emoji: "🏠" },
@@ -2249,7 +2252,6 @@ export default function AgeteApp() {
   const { modalOpen, mode: formMode, quoteTarget, giftName: newGiftName, category: newPostCategory, reviewReason, reviewReaction, reviewNote, reviewHeart, scene: selectedScene, recipient: selectedRecipient, price: selectedPrice, photoUrl: newPhotoUrl, checkResult } = state.postForm;
 
   const t = LANG[lang];
-  const demoOrigin = { lat: 43.7628, lng: 142.3584 };
 
   // 最新stateをrefで参照（stale closure対策）
   const stateRef = useRef(state);
@@ -2299,14 +2301,22 @@ export default function AgeteApp() {
 
   // ── Firebase認証状態の監視（onAuthStateChangedでセッション自動復元） ──
   useEffect(() => {
-    const unsub = authService.subscribeAuthState((fbUser) => {
+    const unsub = authService.subscribeAuthState(async (fbUser) => {
       // 初回のセッション確認のときだけ復元する。
       // （ログイン失敗中やID/パスワードログイン後に、裏の認証イベントでguestに上書きされるのを防ぐ）
       if (!stateRef.current.auth.isCheckingSession) return;
       let saved = null;
       try { const raw = localStorage.getItem(AUTH_STORAGE_KEY); if (raw) saved = JSON.parse(raw); } catch (_) { /* noop */ }
-      // 保存済みの本アカウント情報を最優先で復元（ID/パスワードユーザーをguestに降格させない）
-      const payload = saved || (fbUser ? { uid: fbUser.uid, loginId: "guest_" + fbUser.uid.slice(0, 8), displayName: "ゲスト" } : null);
+      if (saved) {
+        // 保存済みの本アカウント情報があっても、実際のFirebase Authセッションが生きているとは限らない
+        // （キャッシュ削除やトークン失効などでfbUserがnullのまま「ログイン中」に見えると、
+        //   その後ensureAuthed()が発行する匿名uidとsavedのuidが食い違ってしまう）。
+        // fbUserが無ければ匿名セッションを張り直し、実際に確立できたuidで復元する。
+        const uid = fbUser?.uid || (await ensureAuthed() ? fbAuth.currentUser?.uid : null);
+        dispatch({ type: A.SESSION_CHECK_DONE, payload: uid ? { ...saved, uid } : null });
+        return;
+      }
+      const payload = fbUser ? { uid: fbUser.uid, loginId: "guest_" + fbUser.uid.slice(0, 8), displayName: "ゲスト" } : null;
       dispatch({ type: A.SESSION_CHECK_DONE, payload });
     });
     return () => unsub();
@@ -2547,7 +2557,7 @@ export default function AgeteApp() {
         heart: reviewHeart?.trim() || "",
       },
       photoUrl: newPhotoUrl || null,
-      postKind: formMode, quoted: quoteTarget, commentList: [], mine: true,
+      postKind: formMode, quoted: quoteTarget, commentList: [],
       lat: 43.7628, lng: 142.3584, locationName: "北海道",
     };
     // 楽観的UI更新（Firestoreの応答を待たずに即表示）
