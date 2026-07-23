@@ -1598,7 +1598,9 @@ function PostForm({ t, mode = "normal", quoteTarget,
 // ══════════════════════════════════════════════════
 // 🧩 HomePanel / SearchPanel / MePanel
 // ══════════════════════════════════════════════════
-function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory, postSearchQuery, userLocation, isLocating, locationNote, demoOrigin, calcDist, dispatch, A, onOpenQuote, myUid }) {
+function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory, postSearchQuery, userLocation, isLocating, locationNote, demoOrigin, calcDist, dispatch, A, onOpenQuote, myUid, myDisplayName }) {
+  const myCommentName = myDisplayName || t.myName;
+  const myCommentAvatar = myCommentName.charAt(0).toUpperCase();
   const q = postSearchQuery.trim().toLowerCase();
   const filtered = posts.filter(p => {
     if (feedMode === "following" && !following.includes(p.userName) && p.userName !== t.myName) return false;
@@ -1676,19 +1678,19 @@ function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory,
               onToggleFollow={name => dispatch({ type: A.TOGGLE_FOLLOW, payload: name })}
               onOpenQuote={onOpenQuote}
               onAddComment={(postId, text) => {
-                    const comment = { id: "c" + Date.now(), name: t.myName, avatar: t.myAvatar, color: "#C08A3E", text, time: t.justNow, replies: [] };
+                    const comment = { id: "c" + Date.now(), name: myCommentName, avatar: myCommentAvatar, color: "#C08A3E", text, time: t.justNow, replies: [] };
                     dispatch({ type: A.ADD_COMMENT, payload: { postId, comment } });
                     if (!postId.startsWith("optimistic_")) {
                       postService.addComment(postId, comment);
-                      if (post.uid && post.uid !== myUid) notificationService.notifyComment(post.uid, t.myName);
+                      if (post.uid && post.uid !== myUid) notificationService.notifyComment(post.uid, myCommentName);
                     }
                   }}
               onAddReply={(postId, commentId, text) => {
-                    const reply = { id: "r" + Date.now(), name: t.myName, avatar: t.myAvatar, color: "#C08A3E", text, time: t.justNow };
+                    const reply = { id: "r" + Date.now(), name: myCommentName, avatar: myCommentAvatar, color: "#C08A3E", text, time: t.justNow };
                     dispatch({ type: A.ADD_REPLY, payload: { postId, commentId, reply } });
                     if (!postId.startsWith("optimistic_")) {
                       postService.addReply(postId, commentId, reply);
-                      if (post.uid && post.uid !== myUid) notificationService.notifyComment(post.uid, t.myName);
+                      if (post.uid && post.uid !== myUid) notificationService.notifyComment(post.uid, myCommentName);
                     }
                   }} />
           ))}
@@ -2762,7 +2764,7 @@ export default function AgeteApp() {
   };
 
   const panels = {
-    home: <HomePanel t={t} isDesktop={isDesktop} posts={posts} feedMode={feedMode} following={following} selectedCategory={selectedCategory} postSearchQuery={postSearchQuery} userLocation={userLocation} isLocating={isLocating} locationNote={locationNote} demoOrigin={demoOrigin} calcDist={calcDist} dispatch={dispatch} A={A} onOpenQuote={handleOpenQuote} myUid={myUid} />,
+    home: <HomePanel t={t} isDesktop={isDesktop} posts={posts} feedMode={feedMode} following={following} selectedCategory={selectedCategory} postSearchQuery={postSearchQuery} userLocation={userLocation} isLocating={isLocating} locationNote={locationNote} demoOrigin={demoOrigin} calcDist={calcDist} dispatch={dispatch} A={A} onOpenQuote={handleOpenQuote} myUid={myUid} myDisplayName={displayName} />,
     search: <SearchPanel t={t} isDesktop={isDesktop} hatomono={hatomono} isHatoTalking={isHatoTalking} chatLog={chatLog} chatInput={chatInput} isSending={isSending} isWebSearching={isWebSearching} sessions={chatSessions} activeId={chatActiveId} showHistory={chatShowHistory} dbSearchQuery={dbSearchQuery} onSendChat={handleSendChat} onChatKeyDown={handleChatKeyDown} dispatch={dispatch} A={A} />,
     gift: <GiftPanel t={t} isDesktop={isDesktop} dbSearchQuery={dbSearchQuery} dispatch={dispatch} A={A} />,
     post: (
