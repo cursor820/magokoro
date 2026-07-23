@@ -110,7 +110,7 @@ const LANG = {
     submitBtn: "投稿する 🎁",
     postSearchPlaceholder: "投稿を検索（贈り物名・レビュー内容）",
     noMatchTitle: "一致する投稿が見つかりませんでした。", noMatchDesc: "キーワードやカテゴリを変えてみてください。",
-    dbTitle: "📦 お土産データベース", dbSearchPlaceholder: "お土産名・地域・タグで検索",
+    dbTitle: "📦 お土産データベース", dbSearchPlaceholder: "お土産名・地域・タグで検索", itemsUnit: "件",
     dbSearchNoMatch: "一致するお土産が見つからなかった…",
     otoriyoseNote: "現地に行けないときでも、大切な人にすぐ届けられる優しさを。こころんがお取り寄せをお手伝いする🎁",
     otoriyoseAd: "※価格・内容量は目安です／このリンクから購入すると、運営者に少額の紹介料が入ることがあります",
@@ -212,7 +212,7 @@ const LANG = {
     submitBtn: "Post Review 🎁",
     postSearchPlaceholder: "Search posts (gift name, review text)",
     noMatchTitle: "No matching posts found.", noMatchDesc: "Try a different keyword or category.",
-    dbTitle: "📦 Souvenir Database", dbSearchPlaceholder: "Search by name, region, or tag",
+    dbTitle: "📦 Souvenir Database", dbSearchPlaceholder: "Search by name, region, or tag", itemsUnit: " items",
     dbSearchNoMatch: "No matching souvenirs found…",
     otoriyoseNote: "Too far to visit? You can still send your magokoro today — Kokoron will help with the mail order 🎁",
     otoriyoseAd: "* Prices are approximate / buying through this link may earn the operator a small referral fee",
@@ -314,7 +314,7 @@ const LANG = {
     submitBtn: "올리기 🎁",
     postSearchPlaceholder: "게시물 검색（선물 이름·리뷰 내용）",
     noMatchTitle: "일치하는 게시물이 없습니다.", noMatchDesc: "키워드나 카테고리를 바꿔보세요.",
-    dbTitle: "📦 기념품 데이터베이스", dbSearchPlaceholder: "기념품 이름·지역·태그로 검색",
+    dbTitle: "📦 기념품 데이터베이스", dbSearchPlaceholder: "기념품 이름·지역·태그로 검색", itemsUnit: "개",
     dbSearchNoMatch: "일치하는 기념품을 못 찾았어요…",
     otoriyoseNote: "직접 가지 못할 때도, 소중한 사람에게 바로 전할 수 있는 마음. 코코론이 주문을 도와줘요🎁",
     otoriyoseAd: "※가격·용량은 참고용입니다／이 링크로 구매하면 운영자에게 소개 수수료가 들어갈 수 있습니다",
@@ -1801,7 +1801,7 @@ function GiftPanel({ t, isDesktop, dbSearchQuery, dispatch, A }) {
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
           <span style={{ fontSize: "22px" }}>🎁</span>
           <h3 style={{ fontSize: "15px", fontWeight: "bold", margin: 0 }}>{t.dbTitle}</h3>
-          <span style={{ marginLeft: "auto", fontSize: "11px", color: "#93958A", background: "#EFEAE0", padding: "2px 8px", borderRadius: "20px" }}>{SOUVENIR_DB.length}件</span>
+          <span style={{ marginLeft: "auto", fontSize: "11px", color: "#93958A", background: "#EFEAE0", padding: "2px 8px", borderRadius: "20px" }}>{SOUVENIR_DB.length}{t.itemsUnit}</span>
         </div>
         <input type="text" value={dbSearchQuery} onChange={e => dispatch({ type: A.SET_DB_SEARCH_QUERY, payload: e.target.value })} placeholder={t.dbSearchPlaceholder}
           style={{ width: "100%", padding: "9px 12px", border: "1px solid #D9D2C2", borderRadius: "8px", fontSize: "12px", outline: "none", marginBottom: "6px", boxSizing: "border-box" }} />
@@ -1816,7 +1816,8 @@ function GiftPanel({ t, isDesktop, dbSearchQuery, dispatch, A }) {
           {["全て", ...SOUVENIR_REGIONS].slice(0, 10).map(r => (
             <button key={r} onClick={() => dispatch({ type: A.SET_DB_SEARCH_QUERY, payload: r === "全て" ? "" : r })}
               style={{ background: dbSearchQuery === r || (r === "全て" && !dbSearchQuery) ? "#C08A3E" : "#EFEAE0", color: dbSearchQuery === r || (r === "全て" && !dbSearchQuery) ? "#FBF8F2" : "#6B6F64", border: "none", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", cursor: "pointer", fontWeight: "bold", transition: "all 0.15s" }}>
-              {r}
+              {/* 「全て」だけUI語なので現在の言語に翻訳表示。地名は固有名詞なのでそのまま */}
+              {r === "全て" ? t.categories[0] : r}
             </button>
           ))}
         </div>
