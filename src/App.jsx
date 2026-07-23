@@ -1941,7 +1941,8 @@ const A = {
 const MOOD_TAGS_MAX = 2;
 
 // 💬 チャットセッション（Claude/Gemini式の履歴管理）
-const CHAT_STORAGE_KEY = "magokoro_chat_sessions";
+// v2: こころんへのリブランドで文言が変わったため、キーを変えて古いキャッシュ（旧ここりす文言）を破棄する
+const CHAT_STORAGE_KEY = "magokoro_chat_sessions_v2";
 const APP_STORAGE_KEY = "magokoro_app_state";
 // 投稿はFirestoreで管理するためAPP_STORAGE_KEYは不要
 function makeChatSession(lang) {
