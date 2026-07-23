@@ -105,6 +105,8 @@ const LANG = {
     photoBtn: "📸 写真を撮る・選ぶ", photoSelected: "📸 写真をセットした！（タップで変更）", samplePhotoBtn: "🎲 サンプル写真",
     checkPending: "レビューを書いたら、こころんが自動でチェックする！",
     checkGateNote: "⚠️ こころんのチェックを通過すると投稿できる",
+    giftNameRequired: "🎁 贈り物の名前を入れると投稿できる",
+    charUnit: "文字", reviewTooLong: " — 長すぎる、少し短くしてほしい🙏",
     submitBtn: "投稿する 🎁",
     postSearchPlaceholder: "投稿を検索（贈り物名・レビュー内容）",
     noMatchTitle: "一致する投稿が見つかりませんでした。", noMatchDesc: "キーワードやカテゴリを変えてみてください。",
@@ -146,10 +148,8 @@ const LANG = {
     authRecoveryTitle: "パスワードを忘れたときのための質問（任意）",
     authRecoveryHint: "設定しなくても登録できます。心配な方だけ、本人確認用に決めておけます",
     authRecoverySelectPh: "質問を選ぶ", authRecoveryAnswer: "答え",
-    authErrRequired: "入力してください", authErrLoginIdShort: "ログインIDは3文字以上で入力してください",
+    authErrLoginIdShort: "ログインIDは3文字以上で入力してください",
     authErrPasswordShort: "パスワードは6文字以上で入力してください",
-    authErrInvalidCredentials: "ログインIDまたはパスワードが正しくない…",
-    authErrDuplicateId: "そのログインIDはすでに使われている…別のIDを試してほしい",
     authErrNetwork: "サーバーに接続できなかった…時間をおいてもう一度試してほしい",
     authErrRequired: "ログインIDとパスワードを入力してほしい",
     authErrDuplicateId: "そのログインIDはもう使われてる。別のIDを試してほしい",
@@ -207,6 +207,8 @@ const LANG = {
     photoBtn: "📸 Take / choose a photo", photoSelected: "📸 Photo set! (tap to change)", samplePhotoBtn: "🎲 Sample photo",
     checkPending: "Write your review and Kokoron will auto-check it!",
     checkGateNote: "⚠️ Pass Kokoron's check to unlock posting",
+    giftNameRequired: "🎁 Add the gift's name to unlock posting",
+    charUnit: " chars", reviewTooLong: " — a little too long, please shorten it 🙏",
     submitBtn: "Post Review 🎁",
     postSearchPlaceholder: "Search posts (gift name, review text)",
     noMatchTitle: "No matching posts found.", noMatchDesc: "Try a different keyword or category.",
@@ -248,10 +250,8 @@ const LANG = {
     authRecoveryTitle: "A question for password recovery (optional)",
     authRecoveryHint: "You can skip this — only set it if you're worried about forgetting your password",
     authRecoverySelectPh: "Choose a question", authRecoveryAnswer: "Answer",
-    authErrRequired: "This field is required", authErrLoginIdShort: "Login ID must be at least 3 characters",
+    authErrLoginIdShort: "Login ID must be at least 3 characters",
     authErrPasswordShort: "Password must be at least 6 characters",
-    authErrInvalidCredentials: "Login ID or password is incorrect…",
-    authErrDuplicateId: "That login ID is already taken…",
     authErrNetwork: "Couldn't connect to the server…",
     authErrRequired: "Please enter your login ID and password",
     authErrDuplicateId: "That login ID is already taken. Try another one",
@@ -309,6 +309,8 @@ const LANG = {
     photoBtn: "📸 사진 찍기·고르기", photoSelected: "📸 사진을 설정했어요!（탭하면 변경）", samplePhotoBtn: "🎲 샘플 사진",
     checkPending: "리뷰를 쓰면 코코론이 자동으로 체크해요!",
     checkGateNote: "⚠️ 코코론 체크를 통과하면 올릴 수 있어요",
+    giftNameRequired: "🎁 선물 이름을 입력하면 올릴 수 있어요",
+    charUnit: "자", reviewTooLong: " — 조금 길어요, 살짝 줄여주세요 🙏",
     submitBtn: "올리기 🎁",
     postSearchPlaceholder: "게시물 검색（선물 이름·리뷰 내용）",
     noMatchTitle: "일치하는 게시물이 없습니다.", noMatchDesc: "키워드나 카테고리를 바꿔보세요.",
@@ -1607,11 +1609,16 @@ function PostForm({ t, mode = "normal", quoteTarget,
       </button>
       {combinedReview && (
         <p style={{ fontSize: "11px", color: combinedReview.length > MAX_REVIEW_LENGTH ? "#A63446" : "#93958A", textAlign: "center", margin: "8px 0 0 0" }}>
-          {combinedReview.length} / {MAX_REVIEW_LENGTH}文字
-          {combinedReview.length > MAX_REVIEW_LENGTH && " — 長すぎる、少し短くしてほしい🙏"}
+          {combinedReview.length} / {MAX_REVIEW_LENGTH}{t.charUnit}
+          {combinedReview.length > MAX_REVIEW_LENGTH && t.reviewTooLong}
         </p>
       )}
-      {!canSubmit && combinedReview && combinedReview.length <= MAX_REVIEW_LENGTH && <p style={{ fontSize: "11px", color: "#93958A", textAlign: "center", margin: "8px 0 0 0" }}>{t.checkGateNote}</p>}
+      {/* 未達の理由を正しく案内する：チェックは通ったが贈り物名が空なら「名前を入れて」、それ以外はチェックを促す */}
+      {!canSubmit && combinedReview && combinedReview.length <= MAX_REVIEW_LENGTH && (
+        <p style={{ fontSize: "11px", color: "#93958A", textAlign: "center", margin: "8px 0 0 0" }}>
+          {checkResult.status === "ok" && !giftName ? t.giftNameRequired : t.checkGateNote}
+        </p>
+      )}
     </div>
   );
 }
@@ -1623,9 +1630,12 @@ function HomePanel({ t, isDesktop, posts, feedMode, following, selectedCategory,
   const myCommentName = myDisplayName || t.myName;
   const myCommentAvatar = myCommentName.charAt(0).toUpperCase();
   const q = postSearchQuery.trim().toLowerCase();
+  // 「すべて」判定は3言語すべての語（すべて/All/전체）と現在の言語のcategories[0]で行う
+  // （韓国語の「전체」が漏れると全投稿が消えてしまうため）
+  const ALL_CATEGORY_WORDS = ["すべて", "All", "전체", t.categories[0]];
   const filtered = posts.filter(p => {
     if (feedMode === "following" && !following.includes(p.userName) && p.userName !== t.myName) return false;
-    const mc = selectedCategory === "すべて" || selectedCategory === "All" || p.category === selectedCategory;
+    const mc = ALL_CATEGORY_WORDS.includes(selectedCategory) || p.category === selectedCategory;
     const body = ((p.parts && (p.parts.reason + p.parts.reaction + p.parts.note + (p.parts.heart || ""))) || p.review || "").toLowerCase();
     const mq = !q || p.giftName.toLowerCase().includes(q) || body.includes(q);
     return mc && mq;
@@ -2022,9 +2032,9 @@ function reducer(state, action) {
   switch (action.type) {
     case A.SET_LANG: {
       const l = action.payload;
+      // フォロー関係は言語に依存しないので、言語切替でリセットしない（以前は消えていた）
       return { ...state, ui: { ...state.ui, lang: l },
         posts: { ...state.posts, selectedCategory: LANG[l].categories[0], feedMode: "all" },
-        social: { following: [] },
         postForm: { ...state.postForm, category: LANG[l].categories[1], moodTags: [], checkResult: kokoronCheck([state.postForm.reviewReason, state.postForm.reviewReaction, state.postForm.reviewNote].filter(Boolean).join("\n"), l) },
         chat: { ...state.chat, input: "", isSending: false, isWebSearching: false, showHistory: false } };
     }
