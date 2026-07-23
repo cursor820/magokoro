@@ -1944,7 +1944,8 @@ function MePanel({ t, loginId, displayName, avatarUrl, followingCount, onLogout,
         {isGuest && !editingName && <p style={{ fontSize: "10.5px", color: "#93958A", margin: "0 0 4px 0" }}>{t.myGuestNameNote}</p>}
         {saveNote && <p style={{ fontSize: "11px", color: saveNote === t.myNameSaved ? "#16A34A" : "#A63446", margin: "0 0 4px 0" }}>{saveNote}</p>}
 
-        <p style={{ fontSize: "12px", color: "#6B6F64", margin: "0 0 6px 0" }}>{t.memberIdLabel} {loginId || "LINE_USER_4592"}</p>
+        {/* 会員IDは登録ユーザーのみ表示。ゲストの内部ID（guest_xxxx）を見せると「あれ？」となるため隠す */}
+        {!isGuest && <p style={{ fontSize: "12px", color: "#6B6F64", margin: "0 0 6px 0" }}>{t.memberIdLabel} {loginId}</p>}
         <p style={{ fontSize: "12px", color: "#C08A3E", fontWeight: "bold", margin: "0 0 24px 0" }}>👥 {t.followingCountLabel}: {followingCount}</p>
         <button onClick={onLogout} style={{ background: "none", border: "1px solid #A63446", color: "#A63446", padding: "8px 24px", borderRadius: "8px", fontSize: "12px", cursor: "pointer", fontWeight: "bold" }}>{t.authLogout}</button>
       </div>
@@ -2441,6 +2442,8 @@ export default function AgeteApp() {
   const { isLoggedIn, isCheckingSession, isSubmitting, step: authStep, lastAction, loginId, password, recoveryQ, recoveryA, error: authError, currentUser } = state.auth;
   const displayName = currentUser?.displayName || loginId;
   const avatarUrl = currentUser?.avatarUrl || null;
+  // ログイン中アカウントの実ID（ゲストは "guest_xxxx"）。ログインフォームの入力値(loginId)ではなくこちらを使う
+  const accountLoginId = currentUser?.loginId || loginId;
   const { items: posts, selectedCategory, searchQuery: postSearchQuery, feedMode } = state.posts;
   const { following } = state.social;
   const { userLocation, isLocating, note: locationNote } = state.location;
@@ -2831,7 +2834,7 @@ export default function AgeteApp() {
         </div>
       </div>
     ),
-    me: <MePanel t={t} loginId={loginId} displayName={displayName} avatarUrl={avatarUrl} followingCount={following.length} onLogout={handleLogout} onSaveDisplayName={handleSaveDisplayName} onSaveAvatar={handleSaveAvatar} />,
+    me: <MePanel t={t} loginId={accountLoginId} displayName={displayName} avatarUrl={avatarUrl} followingCount={following.length} onLogout={handleLogout} onSaveDisplayName={handleSaveDisplayName} onSaveAvatar={handleSaveAvatar} />,
   };
 
   if (isCheckingSession) {
