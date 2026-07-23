@@ -861,7 +861,7 @@ const AIRPORTS = {
 // IDが空の間は通常の検索リンクとして動く（見た目は変わらない）。
 // ※ ステマ規制(2023〜)により、ID設定後は広告表記が必須。
 //    GiftPanelに表記済みなので、IDを入れてもそのまま合法に運用できる。
-const AFFILIATE = { amazonTag: "", rakutenId: "" };
+const AFFILIATE = { amazonTag: "", rakutenId: "560232e4.c8e349f5.560232e5.8f8fced5" };
 
 function amazonSearchUrl(name) {
   const base = "https://www.amazon.co.jp/s?k=" + encodeURIComponent(name);
