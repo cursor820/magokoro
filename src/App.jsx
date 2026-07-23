@@ -111,7 +111,7 @@ const LANG = {
     dbTitle: "📦 お土産データベース", dbSearchPlaceholder: "お土産名・地域・タグで検索",
     dbSearchNoMatch: "一致するお土産が見つからなかった…",
     otoriyoseNote: "現地に行けないときでも、大切な人にすぐ届けられる優しさを。こころんがお取り寄せをお手伝いする🎁",
-    otoriyoseAd: "※価格・内容量は目安／リンクは広告（アフィリエイト）を含む場合があります",
+    otoriyoseAd: "※価格・内容量は目安です／このリンクから購入すると、運営者に少額の紹介料が入ることがあります",
     otoriyoseAmazon: "📦 お取り寄せでまごころを贈る（Amazon）",
     otoriyoseRakuten: "🚪 遠くからでも届ける（楽天）",
     otoriyosePostPrefix: "📦 「", otoriyosePostSuffix: "」を、遠くにいる大切な人にも贈れる🎁",
@@ -214,7 +214,7 @@ const LANG = {
     dbTitle: "📦 Souvenir Database", dbSearchPlaceholder: "Search by name, region, or tag",
     dbSearchNoMatch: "No matching souvenirs found…",
     otoriyoseNote: "Too far to visit? You can still send your magokoro today — Kokoron will help with the mail order 🎁",
-    otoriyoseAd: "* Prices are approximate / links may include affiliate ads",
+    otoriyoseAd: "* Prices are approximate / buying through this link may earn the operator a small referral fee",
     otoriyoseAmazon: "📦 Send magokoro by mail order (Amazon)",
     otoriyoseRakuten: "🚪 Deliver from afar (Rakuten)",
     otoriyosePostPrefix: "📦 「", otoriyosePostSuffix: "」— send this to someone far away🎁",
@@ -317,7 +317,7 @@ const LANG = {
     dbTitle: "📦 기념품 데이터베이스", dbSearchPlaceholder: "기념품 이름·지역·태그로 검색",
     dbSearchNoMatch: "일치하는 기념품을 못 찾았어요…",
     otoriyoseNote: "직접 가지 못할 때도, 소중한 사람에게 바로 전할 수 있는 마음. 코코론이 주문을 도와줘요🎁",
-    otoriyoseAd: "※가격·용량은 참고용／링크에 광고(제휴)가 포함될 수 있습니다",
+    otoriyoseAd: "※가격·용량은 참고용입니다／이 링크로 구매하면 운영자에게 소개 수수료가 들어갈 수 있습니다",
     otoriyoseAmazon: "📦 주문해서 마고코로 보내기（Amazon）",
     otoriyoseRakuten: "🚪 멀리서도 전하기（라쿠텐）",
     otoriyosePostPrefix: "📦 「", otoriyosePostSuffix: "」를 멀리 있는 소중한 사람에게도 보낼 수 있다🎁",
@@ -1819,6 +1819,7 @@ function GiftPanel({ t, isDesktop, dbSearchQuery, dispatch, A }) {
             ))
           )}
         </div>
+        <p style={{ fontSize: "10.5px", color: "#93958A", textAlign: "center", margin: "14px 0 0 0" }}>{t.otoriyoseAd}</p>
       </div>
     </div>
   );
