@@ -2526,16 +2526,26 @@ export default function AgeteApp() {
   // ── Firestoreタイムラインのリアルタイム購読 ──────────────────────
   // 自分のuidが変わる（ログイン/ログアウト/セッション復元）たびに、いいね済み判定をやり直すため再購読する
   const myUid = currentUser?.uid || null;
+  const realPostsRef = useRef([]); // Firestore由来の実投稿だけを保持（シードと分けて管理）
+  const seedsForLang = (l) => (l === "ja" ? POSTS_JA : POSTS_EN); // 韓国語はまだ専用シードが無いので英語を流用
   useEffect(() => {
     const unsub = postService.subscribeTimeline(myUid, (items) => {
       // Firestoreが空のうちはシード投稿を残す（空のタイムラインで「あれ？」とならないように）
+      realPostsRef.current = items;
       if (items.length > 0) {
-        const seeds = stateRef.current.ui.lang === "ja" ? POSTS_JA : POSTS_EN;
-        dispatch({ type: A.SET_TIMELINE, payload: [...items, ...seeds] });
+        dispatch({ type: A.SET_TIMELINE, payload: [...items, ...seedsForLang(stateRef.current.ui.lang)] });
       }
     });
     return () => unsub();
   }, [myUid]);
+
+  // 言語を切り替えたら、シード投稿だけ現在の言語のものに貼り直す（実投稿はそのまま保持）。
+  // 以前は購読時の言語のままシードが固定され、UIとシードの言語がずれていた
+  useEffect(() => {
+    if (realPostsRef.current.length > 0) {
+      dispatch({ type: A.SET_TIMELINE, payload: [...realPostsRef.current, ...seedsForLang(lang)] });
+    }
+  }, [lang]);
 
   // ── 通知のリアルタイム購読 ──────────────────────
   useEffect(() => {
