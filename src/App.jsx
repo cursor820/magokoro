@@ -112,9 +112,8 @@ const LANG = {
     dbSearchNoMatch: "一致するお土産が見つからなかった…",
     otoriyoseNote: "現地に行けないときでも、大切な人にすぐ届けられる優しさを。こころんがお取り寄せをお手伝いする🎁",
     otoriyoseAd: "※価格・内容量は目安です／このリンクから購入すると、運営者に少額の紹介料が入ることがあります",
-    otoriyoseAmazon: "📦 お取り寄せでまごころを贈る（Amazon）",
-    otoriyoseRakuten: "🚪 遠くからでも届ける（楽天）",
-    otoriyosePostPrefix: "📦 「", otoriyosePostSuffix: "」を、遠くにいる大切な人にも贈れる🎁",
+    otoriyoseHeading: "まごころを届けよう",
+    searchRakuten: "楽天市場でさがす", searchAmazon: "Amazonでさがす",
     categories: ["すべて", "グルメ", "インテリア", "体験・チケット", "フラワー", "ファッション・アクセサリー", "美容", "雑貨・伝統工芸", "言葉・きもち", "行動・お手伝い"],
     moodTagOptions: ["ありがとうを伝えたくて", "お疲れさま、の気持ちで", "お祝いしたくて", "元気になってほしくて", "なんでもない日だけど", "懐かしくなって"],
     scenes: ["誕生日", "引越し祝い", "結婚記念日", "退職祝い", "出産祝い", "バレンタイン", "ホワイトデー", "母の日", "父の日", "日頃の感謝", "その他"],
@@ -215,9 +214,8 @@ const LANG = {
     dbSearchNoMatch: "No matching souvenirs found…",
     otoriyoseNote: "Too far to visit? You can still send your magokoro today — Kokoron will help with the mail order 🎁",
     otoriyoseAd: "* Prices are approximate / buying through this link may earn the operator a small referral fee",
-    otoriyoseAmazon: "📦 Send magokoro by mail order (Amazon)",
-    otoriyoseRakuten: "🚪 Deliver from afar (Rakuten)",
-    otoriyosePostPrefix: "📦 「", otoriyosePostSuffix: "」— send this to someone far away🎁",
+    otoriyoseHeading: "Send some magokoro",
+    searchRakuten: "Search Rakuten", searchAmazon: "Search Amazon",
     categories: ["All", "Food & Drink", "Home & Decor", "Experiences", "Flowers", "Fashion & Accessories", "Beauty", "Crafts & Traditional Goods", "Words & Feelings", "Acts of Service"],
     moodTagOptions: ["Wanted to say thank you", "As a way to say well done", "To celebrate something", "Hoping to cheer them up", "Just an ordinary day", "Feeling nostalgic"],
     scenes: ["Birthday", "Housewarming", "Anniversary", "Farewell", "Baby Gift", "Valentine's", "White Day", "Mother's Day", "Father's Day", "Everyday Thanks", "Other"],
@@ -318,9 +316,8 @@ const LANG = {
     dbSearchNoMatch: "일치하는 기념품을 못 찾았어요…",
     otoriyoseNote: "직접 가지 못할 때도, 소중한 사람에게 바로 전할 수 있는 마음. 코코론이 주문을 도와줘요🎁",
     otoriyoseAd: "※가격·용량은 참고용입니다／이 링크로 구매하면 운영자에게 소개 수수료가 들어갈 수 있습니다",
-    otoriyoseAmazon: "📦 주문해서 마고코로 보내기（Amazon）",
-    otoriyoseRakuten: "🚪 멀리서도 전하기（라쿠텐）",
-    otoriyosePostPrefix: "📦 「", otoriyosePostSuffix: "」를 멀리 있는 소중한 사람에게도 보낼 수 있다🎁",
+    otoriyoseHeading: "마고코로를 전해요",
+    searchRakuten: "라쿠텐에서 찾아보기", searchAmazon: "아마존에서 찾아보기",
     categories: ["전체", "먹거리", "인테리어", "체험·티켓", "플라워", "패션·액세서리", "뷰티", "잡화·전통공예", "말·마음", "행동·도움"],
     moodTagOptions: ["고마움을 전하고 싶어서", "수고했다는 마음으로", "축하하고 싶어서", "기운 냈으면 해서", "특별할 것 없는 날이지만", "문득 그리워져서"],
     scenes: ["생일", "이사 축하", "결혼기념일", "퇴직 축하", "출산 축하", "밸런타인", "화이트데이", "어머니의 날", "아버지의 날", "일상의 감사", "기타"],
@@ -439,6 +436,11 @@ const POSTS_EN = [
 // ══════════════════════════════════════════════════
 // 💾 お土産DB（aliases＝別名・略称での確実な特定用）
 // ══════════════════════════════════════════════════
+// 📦 購入リンクのスキーマ（各アイテムで任意設定・省略時は自動で検索URLになる）
+//   rakutenUrl / amazonUrl : 未設定(省略)なら検索URLを自動生成、明示的にnullを入れるとそのリンクだけ非表示にできる
+//                            （転売業者しか出品がない商品など）。文字列を入れれば直リンクとして使われる
+//   sellerType             : "official"（メーカー公式）/ "authorized"（正規取扱店）/ "other"（未確認・デフォルト）
+//                            後から「公式のみ表示」の絞り込みに使う想定。現状は全件未調査のため省略＝otherで運用
 const SOUVENIR_DB = [
   { id: "s1", region: "旭川", name: "六花亭 マルセイバターサンド", contents: "10個入り ¥1,350・20個入り ¥2,700", aliases: ["マルセイバターサンド", "バターサンド", "マルセイ", "六花亭"], category: "グルメ", tags: ["甘い物", "定番", "バター", "サンドクッキー", "レーズン"], emoji: "🧈", price: "¥1,000〜3,000", shop: "六花亭 旭川店", airports: ["新千歳空港", "旭川空港"],kcalNote: "1個 約168kcal（目安）", stations: ["旭川駅", "札幌駅"], lat: 43.7651, lng: 142.3551 },
   { id: "s2", region: "旭川", name: "ロバ菓子司 蔵生（くらなま）", contents: "6枚入り ¥730", aliases: ["蔵生", "くらなま", "kuranama"], category: "グルメ",
@@ -676,8 +678,8 @@ function kokoronBrainLogic(userMsg, context, lang, communityPosts = []) {
         ? (ja ? "\nそれと、" + spots.join("・") + "でも買える！" : "\nAlso available at " + spots.join(", ") + "!")
         : "";
       return { mode: "reply", text: ja
-        ? "「" + lastItem.name + "」は、" + lastItem.shop + "（" + lastItem.region + "）で買える。" + shopMapLink(lastItem, true) + "\n🚪📦 会いに行けなくても、気持ちはちゃんと届けられる → [Amazon](" + amazonSearchUrl(lastItem.name) + ")　[楽天](" + rakutenSearchUrl(lastItem.name) + ")" + spotNote
-        : "You can get \"" + lastItem.name + "\" at " + lastItem.shop + " (" + lastItem.region + ")." + shopMapLink(lastItem, false) + "\n🛒 [Find on Amazon](" + amazonSearchUrl(lastItem.name) + ") [Rakuten](" + rakutenSearchUrl(lastItem.name) + ")" + spotNote,
+        ? "「" + lastItem.name + "」は、" + lastItem.shop + "（" + lastItem.region + "）で買える。" + shopMapLink(lastItem, true) + "\n🚪📦 会いに行けなくても、気持ちはちゃんと届けられる → [楽天市場でさがす](" + rakutenSearchUrl(lastItem.name) + ")　[Amazonでさがす](" + amazonSearchUrl(lastItem.name) + ")" + spotNote
+        : "You can get \"" + lastItem.name + "\" at " + lastItem.shop + " (" + lastItem.region + ")." + shopMapLink(lastItem, false) + "\n🛒 [Search Rakuten](" + rakutenSearchUrl(lastItem.name) + ") [Search Amazon](" + amazonSearchUrl(lastItem.name) + ")" + spotNote,
         expression: "happy", context: keep };
     }
     if (/いくら|値段|価格|how much/i.test(msg)) {
@@ -872,6 +874,15 @@ function rakutenSearchUrl(name) {
   return AFFILIATE.rakutenId
     ? "https://hb.afl.rakuten.co.jp/hgc/" + AFFILIATE.rakutenId + "/?pc=" + encodeURIComponent(target) + "&m=" + encodeURIComponent(target)
     : target;
+}
+
+// 🔗 購入リンクの一元管理：楽天→Amazonの順で返す（品質理由で楽天を先に出す）。
+// item.rakutenUrl/amazonUrlが未設定(undefined)なら検索URLを自動生成、
+// 明示的にnullを入れた商品はそのリンクだけ非表示にできる（転売業者しか出品がない場合など）。
+function getPurchaseLinks(item) {
+  const rakuten = item.rakutenUrl === null ? null : (item.rakutenUrl || rakutenSearchUrl(item.name));
+  const amazon = item.amazonUrl === null ? null : (item.amazonUrl || amazonSearchUrl(item.name));
+  return { rakuten, amazon, sellerType: item.sellerType || "other" };
 }
 
 // 投稿のギフト名がDB商品と確実に一致する時だけ、お取り寄せ導線を出す
@@ -1351,10 +1362,20 @@ function PostCard({ t, post, distance, isFollowing, isFirstPost, onLike, onToggl
           </div>
         )}
 
-        {/* 📦 この投稿を見て「自分も誰かに贈りたい」と思った人のための導線（DB商品と確実に一致した時だけ） */}
-        {(() => { const dbi = findDbItemForPost(post.giftName); return dbi ? (
-          <a href={amazonSearchUrl(dbi.name)} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", fontSize: "11px", fontWeight: "bold", color: "#B45309", background: "#FFF7ED", border: "1px dashed #FDBA74", borderRadius: "8px", padding: "7px", marginBottom: "12px", textDecoration: "none" }}>{t.otoriyosePostPrefix}{dbi.name}{t.otoriyosePostSuffix}</a>
-        ) : null; })()}
+        {/* 📦 この投稿を見て「自分も誰かに贈りたい」と思った人のための導線（DB商品と確実に一致した時だけ）。
+            通販カタログ化を避けるため控えめに1行、動詞は「さがす」で統一、購入先に優劣はつけない */}
+        {(() => { const dbi = findDbItemForPost(post.giftName); if (!dbi) return null;
+          const { rakuten, amazon } = getPurchaseLinks(dbi);
+          if (!rakuten && !amazon) return null;
+          const linkStyle = { color: "#93958A", textDecoration: "underline" };
+          return (
+            <p style={{ textAlign: "center", fontSize: "11px", color: "#93958A", margin: "0 0 12px 0" }}>
+              {rakuten && <a href={rakuten} target="_blank" rel="noopener noreferrer" style={linkStyle}>{t.searchRakuten}</a>}
+              {rakuten && amazon && " ・ "}
+              {amazon && <a href={amazon} target="_blank" rel="noopener noreferrer" style={linkStyle}>{t.searchAmazon}</a>}
+            </p>
+          );
+        })()}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #EDF2F7", paddingTop: "10px", fontSize: "12px", color: "#6B6F64", flexWrap: "wrap", gap: "6px" }}>
           <button onClick={() => onLike(post.id)} style={{ background: "none", border: "none", color: post.liked ? "#A63446" : "#6B6F64", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: post.liked ? "bold" : "normal" }}>{post.liked ? "❤️" : "🤍"} {t.thanksHeartLabel}</button>
@@ -1810,11 +1831,21 @@ function GiftPanel({ t, isDesktop, dbSearchQuery, dispatch, A }) {
                     {s.kcalNote && <span style={{ fontSize: "10px", color: "#16A34A", background: "#F0FDF4", padding: "1px 5px", borderRadius: "4px" }}>🔥{s.kcalNote}</span>}
                   </div>
                 </div>
-                {/* 📦 お取り寄せ導線＝どこでもドア（AFFILIATEにIDを入れるとアフィリエイトリンクに切り替わる） */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "8px" }}>
-                  <a href={amazonSearchUrl(s.name)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", fontSize: "11px", fontWeight: "bold", color: "#B45309", background: "#FFF7ED", border: "1px solid #FDBA74", borderRadius: "6px", padding: "5px 0", textDecoration: "none" }}>{t.otoriyoseAmazon}</a>
-                  <a href={rakutenSearchUrl(s.name)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", fontSize: "11px", fontWeight: "bold", color: "#9F1239", background: "#FFF1F2", border: "1px solid #FDA4AF", borderRadius: "6px", padding: "5px 0", textDecoration: "none" }}>{t.otoriyoseRakuten}</a>
-                </div>
+                {/* 📦 お取り寄せ導線：楽天→Amazonの順、同じ見た目のボタンで優劣をつけない（AFFILIATEにIDを入れると自動で反映） */}
+                {(() => {
+                  const { rakuten, amazon } = getPurchaseLinks(s);
+                  if (!rakuten && !amazon) return null;
+                  const btnStyle = { flex: 1, textAlign: "center", fontSize: "11px", fontWeight: "bold", color: "#6B4A2E", background: "#FBF8F2", border: "1px solid " + THEME.line, borderRadius: "6px", padding: "6px 0", textDecoration: "none" };
+                  return (
+                    <div style={{ marginTop: "8px" }}>
+                      <p style={{ fontSize: "10.5px", color: "#93958A", fontWeight: "bold", margin: "0 0 5px 0" }}>{t.otoriyoseHeading}</p>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        {rakuten && <a href={rakuten} target="_blank" rel="noopener noreferrer" style={btnStyle}>{t.searchRakuten}</a>}
+                        {amazon && <a href={amazon} target="_blank" rel="noopener noreferrer" style={btnStyle}>{t.searchAmazon}</a>}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ))
           )}
