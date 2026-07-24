@@ -528,6 +528,29 @@ const SOUVENIR_DB = [
   { id: "s78", region: "札幌", name: "北海道 名店ラーメン食べ比べセット", aliases: ["ラーメン詰め合わせ", "食べ比べセット", "ラーメンセット"], category: "グルメ", tags: ["ラーメン", "詰め合わせ", "食べ比べ", "ギフト向け", "複数店舗"], emoji: "🍜", price: "¥3,000〜5,000", shop: "新千歳空港 お土産処", airports: ["新千歳空港"], stations: ["札幌駅"], lat: 42.7752, lng: 141.6923 },
 ];
 
+// 💴 価格・個数データ（手動入力／将来は楽天商品APIで自動更新も可能な構造）
+// 既存の contents 文字列（例「10個入り ¥1,350・20個入り ¥2,700」）を variants 配列にパースし、
+// lowestPrice を一覧用に自動算出して各商品に付与する。価格は変動するため取得時点を明示する。
+const PRICE_UPDATED_AT = "2026-07"; // 価格の目安を確認した年月（「価格は目安」の注意書きと対応）
+
+function parseVariants(contents) {
+  if (!contents) return [];
+  return contents.split("・").map((part) => {
+    const m = part.match(/^(.*?)\s*¥\s*([\d,]+)/);
+    if (!m) return null;
+    const price = parseInt(m[2].replace(/,/g, ""), 10);
+    if (!Number.isFinite(price)) return null;
+    return { pieceCount: m[1].trim(), price };
+  }).filter(Boolean);
+}
+
+// 各商品に variants / lowestPrice / priceUpdatedAt を付与（明示指定があればそれを優先）
+SOUVENIR_DB.forEach((s) => {
+  if (!s.variants) s.variants = parseVariants(s.contents);
+  if (s.lowestPrice == null) s.lowestPrice = s.variants.length ? Math.min(...s.variants.map((v) => v.price)) : null;
+  if (!s.priceUpdatedAt) s.priceUpdatedAt = PRICE_UPDATED_AT;
+});
+
 const SOUVENIR_REGIONS = [...new Set(SOUVENIR_DB.map(s => s.region))];
 
 // ══════════════════════════════════════════════════
@@ -670,6 +693,22 @@ function kokoronBrainLogic(userMsg, context, lang, communityPosts = []) {
         expression: "happy", context: keep };
     }
     // 商品名や売り場の指定があるときは、条件を外したまま下の通常処理へ流す
+  }
+
+  // 💴 価格・個数の質問は、ネット検索ではなく自社DB（variants/lowestPrice）を優先して答える。
+  //    商品名が文中にあればそれを、無ければ直前の話題（lastItemId）を対象にする
+  {
+    const askCheapest = CHEAP_Q_RE.test(msg);
+    const askPieces = PIECE_Q_RE.test(msg);
+    const askPrice = PRICE_Q_RE.test(msg) || askCheapest;
+    if (askPieces || askPrice) {
+      const priceItem = findItemInText(msg) || (context.lastItemId ? SOUVENIR_DB.find(s => s.id === context.lastItemId) : null);
+      if (priceItem) {
+        keep.lastItemId = priceItem.id;
+        const mode = askCheapest ? "cheapest" : askPieces ? "pieces" : "price";
+        return { mode: "reply", text: formatPriceAnswer(priceItem, ja, mode), expression: "happy", context: keep };
+      }
+    }
   }
 
   const lastItem = context.lastItemId ? SOUVENIR_DB.find(s => s.id === context.lastItemId) : null;
@@ -987,6 +1026,39 @@ function describeItem(item, lang) {
     ? item.emoji + " 「" + item.name + "」だね！\n" + item.region + "の" + item.shop + "で買える、" + (item.tags || []).slice(0, 4).join("・") + "が特徴のお土産だ。価格帯は" + item.price + "✨"
     : item.emoji + " \"" + item.name + "\"! From " + item.shop + " in " + item.region + ". Features: " + (item.tags || []).slice(0, 4).join(", ") + ". " + item.price + "✨";
 }
+
+// 💴 価格・個数の質問に、商品の variants / lowestPrice（自社DB）で答える。
+// mode: "pieces"(何個入り) / "cheapest"(一番安い) / "price"(いくら)
+function formatPriceAnswer(item, ja, mode) {
+  const vs = item.variants || [];
+  const when = item.priceUpdatedAt || "";
+  const approx = ja ? "（" + when + "時点の目安）" : " (approx, as of " + when + ")";
+  if (vs.length === 0) {
+    return ja
+      ? "「" + item.name + "」の価格帯は" + item.price + "。個数ごとの詳しい価格はまだデータに入れられてないんだ…正直に言うね🙏 " + item.shop + "の店頭や通販で確認してほしい。"
+      : "\"" + item.name + "\" is in the " + item.price + " range. I don't have per-size prices for it yet — being honest🙏 Please check the shop or an online listing.";
+  }
+  const list = vs.map(v => ja ? v.pieceCount + "：¥" + v.price.toLocaleString() : v.pieceCount + ": ¥" + v.price.toLocaleString()).join(ja ? "／" : ", ");
+  const low = vs.reduce((a, b) => (b.price < a.price ? b : a));
+  if (mode === "cheapest") {
+    return ja
+      ? "「" + item.name + "」で一番お手頃なのは " + low.pieceCount + " の ¥" + low.price.toLocaleString() + " だよ" + approx + "。"
+      : "The most affordable \"" + item.name + "\" is the " + low.pieceCount + " at ¥" + low.price.toLocaleString() + approx + ".";
+  }
+  if (mode === "pieces") {
+    return ja
+      ? "「" + item.name + "」は " + list + " があるよ" + approx + "。"
+      : "\"" + item.name + "\" comes in — " + list + approx + ".";
+  }
+  return ja
+    ? "「" + item.name + "」の価格はこんな感じ" + approx + "：\n" + list + "\n一番お手頃なのは " + low.pieceCount + "（¥" + low.price.toLocaleString() + "）だよ。"
+    : "Prices for \"" + item.name + "\"" + approx + ":\n" + list + "\nCheapest is the " + low.pieceCount + " (¥" + low.price.toLocaleString() + ").";
+}
+
+// 価格・個数の質問かどうかの判定
+const PRICE_Q_RE = /(いくら|値段|価格|お値段|how much|price|プライス)/i;
+const CHEAP_Q_RE = /(一番安い|いちばん安い|1番安い|最安|安いの|安いやつ|お手頃|cheapest|lowest\s*price|most affordable)/i;
+const PIECE_Q_RE = /(何個|何枚|何本|個数|入りは|入りが|入りある|入りって|バリエーション|サイズ|大きさ|how many|pieces?|sizes?|variant)/i;
 
 // ══════════════════════════════════════════════════
 // 待機ヘルパー
