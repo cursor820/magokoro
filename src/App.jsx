@@ -77,7 +77,7 @@ const Kokoron = ({ size = 90, expression = "idle", isTalking = false }) => {
 // ══════════════════════════════════════════════════
 const LANG = {
   ja: {
-    appSub: "お土産・ギフトレビュー", postBtn: "+ 投稿する", switchLabel: "EN",
+    appName: "まごころ", appSub: "お土産・ギフトレビュー", postBtn: "+ 投稿する", switchLabel: "EN",
     heroTitle: '"あの贈り物、よかったよ"', heroSub: "が集まる場所",
     heroDesc: "モノも、コトも、言葉も。贈った体験と、もらった気持ちをシェアしよう。",
     toLabel: "贈り先：", shareBtn: "↗ シェア", justNow: "たった今", myName: "あなた", myAvatar: "あ",
@@ -121,7 +121,7 @@ const LANG = {
     scenes: ["誕生日", "引越し祝い", "結婚記念日", "退職祝い", "出産祝い", "バレンタイン", "ホワイトデー", "母の日", "父の日", "日頃の感謝", "その他"],
     recipients: ["母", "父", "友人（女性）", "友人（男性）", "恋人", "配偶者", "兄弟・姉妹", "上司", "同僚", "祖父母", "両親", "子ども", "自分", "その他"],
     prices: ["プライスレス", "〜¥1,000", "¥1,000〜3,000", "¥3,000〜5,000", "¥5,000〜10,000", "¥10,000〜"],
-    nearbyBtn: "📍 近くのお土産から探す", distanceUnit: "m先",
+    nearbyBtn: "📍 近くのお土産から探す", distanceUnit: "m先", distanceKm: "km先", distanceNearby: "すぐ近く",
     nearbyFallbackNote: "現在地を取得できなかったので、旭川駅の周辺で表示してる！",
     locateBtn: "📍 現在地を使う", locating: "取得中…", locationSetNote: "現在地を設定した！",
     nearHere: "現在地付近",
@@ -179,7 +179,7 @@ const LANG = {
     postToastText: "こころんが受け取ったよ！", nudgeText: "誰かのすてきな投稿、見てみる？",
   },
   en: {
-    appSub: "Gift Review Community", postBtn: "+ Post Review", switchLabel: "한국어",
+    appName: "Magokoro", appSub: "Gift Review Community", postBtn: "+ Post Review", switchLabel: "한국어",
     heroTitle: '"That gift was perfect."', heroSub: " Share your gifting story.",
     heroDesc: "Things, experiences, even words. Share what you gave — and how it felt to receive.",
     toLabel: "To: ", shareBtn: "↗ Share", justNow: "Just now", myName: "You", myAvatar: "Y",
@@ -219,11 +219,11 @@ const LANG = {
     otoriyoseHeading: "Send some magokoro",
     searchRakuten: "Search Rakuten", searchAmazon: "Search Amazon",
     categories: ["All", "Food & Drink", "Home & Decor", "Experiences", "Flowers", "Fashion & Accessories", "Beauty", "Crafts & Traditional Goods", "Words & Feelings", "Acts of Service"],
-    moodTagOptions: ["Wanted to say thank you", "As a way to say well done", "To celebrate something", "Hoping to cheer them up", "Just an ordinary day", "Feeling nostalgic"],
+    moodTagOptions: ["To say thank you", "For someone who's been working hard", "To celebrate", "To cheer someone up", "Just because", "A taste of home"],
     scenes: ["Birthday", "Housewarming", "Anniversary", "Farewell", "Baby Gift", "Valentine's", "White Day", "Mother's Day", "Father's Day", "Everyday Thanks", "Other"],
     recipients: ["Mother", "Father", "Female Friend", "Male Friend", "Partner", "Spouse", "Sibling", "Boss", "Colleague", "Grandparents", "Parents", "Child", "Myself", "Other"],
     prices: ["Priceless", "Under ¥1,000", "¥1,000–3,000", "¥3,000–5,000", "¥5,000–10,000", "¥10,000+"],
-    nearbyBtn: "📍 Find souvenirs near me", distanceUnit: "m away",
+    nearbyBtn: "📍 Find souvenirs near me", distanceUnit: "m away", distanceKm: "km away", distanceNearby: "Nearby",
     nearbyFallbackNote: "Couldn't get your location, showing near Asahikawa Station instead!",
     locateBtn: "📍 Use current location", locating: "Locating…", locationSetNote: "Location set!",
     nearHere: "Near current location",
@@ -281,7 +281,7 @@ const LANG = {
     postToastText: "Kokoron caught it!", nudgeText: "Want to see someone else's lovely post?",
   },
   ko: {
-    appSub: "기념품·선물 리뷰", postBtn: "+ 리뷰 올리기", switchLabel: "日本語",
+    appName: "마고코로", appSub: "기념품·선물 리뷰", postBtn: "+ 리뷰 올리기", switchLabel: "日本語",
     heroTitle: '"그 선물, 정말 좋았어"', heroSub: "가 모이는 곳",
     heroDesc: "물건도, 경험도, 말 한마디도. 선물한 경험과 받은 마음을 나눠보세요.",
     toLabel: "받는 사람:", shareBtn: "↗ 공유", justNow: "방금", myName: "나", myAvatar: "나",
@@ -325,7 +325,7 @@ const LANG = {
     scenes: ["생일", "이사 축하", "결혼기념일", "퇴직 축하", "출산 축하", "밸런타인", "화이트데이", "어머니의 날", "아버지의 날", "일상의 감사", "기타"],
     recipients: ["어머니", "아버지", "친구(여)", "친구(남)", "연인", "배우자", "형제·자매", "상사", "동료", "조부모", "부모님", "아이", "나 자신", "기타"],
     prices: ["프라이스리스", "〜¥1,000", "¥1,000〜3,000", "¥3,000〜5,000", "¥5,000〜10,000", "¥10,000〜"],
-    nearbyBtn: "📍 근처 기념품 찾기", distanceUnit: "m 거리",
+    nearbyBtn: "📍 근처 기념품 찾기", distanceUnit: "m 거리", distanceKm: "km 거리", distanceNearby: "근처",
     nearbyFallbackNote: "현재 위치를 가져오지 못해서 아사히카와역 주변으로 표시해요!",
     locateBtn: "📍 현재 위치 사용", locating: "가져오는 중…", locationSetNote: "현재 위치를 설정했어요!",
     nearHere: "현재 위치 근처",
@@ -1158,7 +1158,7 @@ function Header({ t, onToggleLang, isLoggedIn, notifications, onToggleNotifPanel
     <header style={{ background: "#FBF8F2", borderBottom: "1px solid #D9D2C2", padding: "8px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 30 }}>
       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <Kokoron size={30} />
-        <h1 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: THEME.accentAmber, fontFamily: "'Shippori Mincho', serif", letterSpacing: "1.5px" }}>まごころ</h1>
+        <h1 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: THEME.accentAmber, fontFamily: "'Shippori Mincho', serif", letterSpacing: "1.5px" }}>{t.appName}</h1>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         {isLoggedIn && <NotificationBell t={t} items={notifications.items} panelOpen={notifications.panelOpen} onTogglePanel={onToggleNotifPanel} />}
@@ -1246,6 +1246,25 @@ function countComments(list) {
   return (list || []).reduce((n, c) => n + 1 + (c.replies ? c.replies.length : 0), 0);
 }
 
+// 気持ちタグは選択時の言語文字列で投稿に保存される。表示時は各言語の選択肢リストで
+// インデックスを引き当て、現在の言語のラベルに翻訳する（不明なタグはそのまま表示）
+function translateMoodTag(tag, t) {
+  for (const lang of ["ja", "en", "ko"]) {
+    const idx = LANG[lang].moodTagOptions.indexOf(tag);
+    if (idx >= 0) return t.moodTagOptions[idx];
+  }
+  return tag;
+}
+
+// 距離表示：0m は「すぐ近く」、1000m以上はkm表記（大きな数字や、丸ゴシックで0がO字に見える問題を回避）
+function formatDistance(meters, t) {
+  if (meters == null) return null;
+  if (meters <= 0) return t.distanceNearby;
+  if (meters < 1000) return meters + t.distanceUnit;
+  const km = meters / 1000;
+  return (km >= 10 ? Math.round(km) : km.toFixed(1)) + t.distanceKm;
+}
+
 function PostCard({ t, post, distance, isFollowing, isFirstPost, onLike, onToggleFollow, onOpenQuote, onAddComment, onAddReply }) {
   const [showComments, setShowComments] = useState(false);
   const [commentInput, setCommentInput] = useState("");
@@ -1289,7 +1308,7 @@ function PostCard({ t, post, distance, isFollowing, isFirstPost, onLike, onToggl
                 <span style={{ fontSize: "13px", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{post.userName}</span>
                 {isFirstPost && <span style={{ fontSize: "10.5px", color: THEME.cardBg, background: THEME.moss, padding: "2px 8px", borderRadius: "10px", fontWeight: "bold", flexShrink: 0 }}>{t.firstPostBadge}</span>}
               </div>
-              <div style={{ fontSize: "10px", color: "#93958A" }}>{post.createdAt} • {post.locationName}{distance != null && <span style={{ color: "#C08A3E", marginLeft: "4px" }}>📍 {distance}{t.distanceUnit}</span>}</div>
+              <div style={{ fontSize: "10px", color: "#93958A" }}>{post.createdAt} • {post.locationName}{distance != null && <span style={{ color: "#C08A3E", marginLeft: "4px" }}>📍 {formatDistance(distance, t)}</span>}</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
@@ -1318,7 +1337,7 @@ function PostCard({ t, post, distance, isFollowing, isFirstPost, onLike, onToggl
         {post.moodTags && post.moodTags.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
             {post.moodTags.map((tag, i) => (
-              <span key={i} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "999px", border: "1px solid " + THEME.accentRed, color: THEME.accentRed, background: "rgba(166,52,70,0.08)" }}>{tag}</span>
+              <span key={i} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "999px", border: "1px solid " + THEME.accentRed, color: THEME.accentRed, background: "rgba(166,52,70,0.08)" }}>{translateMoodTag(tag, t)}</span>
             ))}
           </div>
         )}
@@ -1827,20 +1846,20 @@ function GiftPanel({ t, isDesktop, dbSearchQuery, dispatch, A }) {
           ) : (
             (dbSearchQuery.trim() ? matchSouvenirs(dbSearchQuery) : SOUVENIR_DB).map(s => (
               <div key={s.id} style={{ padding: "10px", background: "#EFEAE0", borderRadius: "10px", border: "1px solid #D9D2C2" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center", minWidth: 0 }}>
-                    <span style={{ fontSize: "22px", flexShrink: 0 }}>{s.emoji}</span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: "bold", color: "#1A3A5C" }}>{s.name}</div>
-                      <div style={{ fontSize: "11px", color: "#6B6F64" }}>{s.shop}</div>
-                      <div style={{ fontSize: "11px", color: "#93958A" }}>{s.region}{s.contents ? "・" + s.contents : ""}</div>
-                    </div>
+                {/* 上段: 絵文字＋商品名（フル幅寄り）＋カテゴリバッジのみ。価格・カロリーは下段に分離し、
+                    長い文言が商品名の幅を奪って縦1文字ずつに潰れるのを防ぐ */}
+                <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "22px", flexShrink: 0 }}>{s.emoji}</span>
+                  <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: "bold", color: "#1A3A5C" }}>{s.name}</div>
+                    <div style={{ fontSize: "11px", color: "#6B6F64" }}>{s.shop}</div>
+                    <div style={{ fontSize: "11px", color: "#93958A" }}>{s.region}{s.contents ? "・" + s.contents : ""}</div>
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-end" }}>
-                    <span style={{ fontSize: "10px", background: "#FFAB76", color: "#FBF8F2", padding: "2px 6px", borderRadius: "4px" }}>{s.category}</span>
-                    <span style={{ fontSize: "11px", fontWeight: "bold", color: "#E8A87C" }}>{s.price}</span>
-                    {s.kcalNote && <span style={{ fontSize: "10px", color: "#16A34A", background: "#F0FDF4", padding: "1px 5px", borderRadius: "4px" }}>🔥{s.kcalNote}</span>}
-                  </div>
+                  <span style={{ flexShrink: 0, fontSize: "10px", background: "#FFAB76", color: "#FBF8F2", padding: "2px 6px", borderRadius: "4px", whiteSpace: "nowrap" }}>{s.category}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px", marginTop: "6px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "bold", color: "#E8A87C" }}>{s.price}</span>
+                  {s.kcalNote && <span style={{ fontSize: "10px", color: "#16A34A", background: "#F0FDF4", padding: "1px 5px", borderRadius: "4px" }}>🔥{s.kcalNote}</span>}
                 </div>
                 {/* 📦 お取り寄せ導線：楽天→Amazonの順、同じ見た目のボタンで優劣をつけない（AFFILIATEにIDを入れると自動で反映） */}
                 {(() => {
@@ -2034,11 +2053,18 @@ function reducer(state, action) {
   switch (action.type) {
     case A.SET_LANG: {
       const l = action.payload;
+      // まだユーザー発言のない（＝挨拶だけの）チャットは、挨拶とタイトルを新しい言語に貼り替える。
+      // 会話が始まっているセッションはそのまま保持する（挨拶は生成時の言語で固定されるため以前は追従しなかった）
+      const sessions = state.chat.sessions.map(s => {
+        const hasUserMsg = (s.log || []).some(m => m.sender === "user");
+        if (hasUserMsg) return s;
+        return { ...s, title: LANG[l].chatDefaultTitle, log: [{ sender: "hato", text: LANG[l].chatWelcome, expression: "happy" }] };
+      });
       // フォロー関係は言語に依存しないので、言語切替でリセットしない（以前は消えていた）
       return { ...state, ui: { ...state.ui, lang: l },
         posts: { ...state.posts, selectedCategory: LANG[l].categories[0], feedMode: "all" },
         postForm: { ...state.postForm, category: LANG[l].categories[1], moodTags: [], checkResult: kokoronCheck([state.postForm.reviewReason, state.postForm.reviewReaction, state.postForm.reviewNote].filter(Boolean).join("\n"), l) },
-        chat: { ...state.chat, input: "", isSending: false, isWebSearching: false, showHistory: false } };
+        chat: { ...state.chat, sessions, input: "", isSending: false, isWebSearching: false, showHistory: false } };
     }
     case A.SET_NAV: return { ...state, ui: { ...state.ui, currentNav: action.payload } };
     case A.AUTH_GOTO_STEP: return { ...state, auth: { ...state.auth, step: action.payload, error: "", lastAction: action.payload === "signup_id" ? "signup" : action.payload === "login_id" ? "login" : state.auth.lastAction } };
